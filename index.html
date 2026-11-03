@@ -3,92 +3,151 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Uber Clone – 3D Houston Map</title>
+  <title>Uber Clone – Class Prototype</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
   <style>
     * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; font-family: Helvetica, Arial, sans-serif; }
-    header { background: #000; color: #fff; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
-    header strong { font-size: 24px; letter-spacing: -1px; }
-    button { padding: 10px 14px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; background: #fff; color: #000; }
-    #map { position: absolute; top: 56px; bottom: 0; left: 0; right: 0; }
-    #controls { position: absolute; top: 68px; left: 12px; z-index: 5; display: flex; flex-direction: column; gap: 8px; }
-    #controls button { background: #000; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+    html, body { margin: 0; height: 100%; }
+    body { font-family: Helvetica, Arial, sans-serif; background: #f6f6f6; color: #000; }
+    header { background: #000; color: #fff; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; font-size: 28px; font-weight: bold; letter-spacing: -1px; }
+    header button { width: auto; padding: 10px 14px; font-size: 14px; background: #fff; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; letter-spacing: 0; }
+    main { max-width: 480px; margin: 24px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.1); margin-bottom: 16px; }
+    h2 { margin: 0 0 16px; font-size: 24px; }
+    input { width: 100%; padding: 14px; margin-bottom: 10px; border: none; background: #eee; border-radius: 8px; font-size: 16px; }
+    .ride { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+    .ride:last-child { border-bottom: none; }
+    .ride small { color: #666; }
+    .ride strong { font-size: 18px; }
+    .big { width: 100%; padding: 16px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+    #requestBtn { background: #000; color: #fff; border: none; }
+    #requestBtn.confirmed { background: #1a9e4b; }
+    #mapBtn { margin-top: 10px; background: #fff; color: #000; border: 2px solid #000; }
+    #mapBtn:hover { background: #eee; }
+    #message { margin-top: 14px; text-align: center; font-size: 16px; min-height: 22px; }
+    #mapView { display: none; height: 100%; }
+    #map { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #ddd; }
+    #controls { position: absolute; top: 72px; left: 12px; z-index: 5; display: flex; flex-direction: column; gap: 8px; }
+    #controls button { padding: 10px 14px; background: #000; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
     #info { position: absolute; bottom: 24px; left: 12px; right: 12px; max-width: 360px; background: #fff; padding: 12px 14px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.3); z-index: 5; font-size: 14px; }
   </style>
 </head>
 <body>
-  <header>
-    <strong>Uber</strong>
-    <button onclick="window.location.href='index.html'">← Back</button>
-  </header>
 
-  <div id="controls">
-    <button id="rotateBtn">Rotate view</button>
-    <button id="tripBtn">Fly to Downtown</button>
+  <!-- VIEW 1: ride ordering -->
+  <div id="rideView">
+    <header>Uber</header>
+    <main>
+      <div class="card">
+        <h2>Where to?</h2>
+        <input type="text" value="Rice University, Houston, TX" aria-label="Pickup">
+        <input type="text" placeholder="Enter destination" aria-label="Destination">
+      </div>
+      <div class="card">
+        <h2>Choose a ride</h2>
+        <div class="ride"><div><strong>UberX</strong><br><small>4 min away · 4 seats</small></div><strong>$14.20</strong></div>
+        <div class="ride"><div><strong>Comfort</strong><br><small>6 min away · Newer cars</small></div><strong>$18.75</strong></div>
+        <div class="ride"><div><strong>UberXL</strong><br><small>8 min away · 6 seats</small></div><strong>$24.10</strong></div>
+      </div>
+      <button id="requestBtn" class="big">Request UberX</button>
+      <button id="mapBtn" class="big">View 3D map of Houston</button>
+      <div id="message"></div>
+    </main>
   </div>
-  <div id="info">3D building mass of Houston. Drag to pan, right-click drag (or two fingers) to tilt and rotate.</div>
-  <div id="map"></div>
+
+  <!-- VIEW 2: 3D map (same page, no file navigation) -->
+  <div id="mapView">
+    <header>Uber <button id="backBtn">← Back</button></header>
+    <div id="controls">
+      <button id="rotateBtn">Rotate view</button>
+      <button id="tripBtn">Fly to Downtown</button>
+    </div>
+    <div id="info">Loading 3D map… Drag to pan; right-click drag (or two fingers) to tilt and rotate.</div>
+    <div id="map"></div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    // Mock coordinates [longitude, latitude]
+    const rideView = document.getElementById("rideView");
+    const mapView = document.getElementById("mapView");
+    const info = document.getElementById("info");
+
+    // ---- Request button ----
+    const reqBtn = document.getElementById("requestBtn");
+    reqBtn.addEventListener("click", function () {
+      reqBtn.textContent = "Ride requested ✓";
+      reqBtn.classList.add("confirmed");
+      document.getElementById("message").textContent = "Your driver, Alex, is arriving in 4 minutes.";
+    });
+
+    // ---- Switching views ----
+    document.getElementById("mapBtn").addEventListener("click", function () {
+      rideView.style.display = "none";
+      mapView.style.display = "block";
+      startMap();
+    });
+    document.getElementById("backBtn").addEventListener("click", function () {
+      mapView.style.display = "none";
+      rideView.style.display = "block";
+      rotating = false;
+      document.getElementById("rotateBtn").textContent = "Rotate view";
+    });
+
+    // ---- 3D map (created once, the first time it is opened) ----
     const RICE = [-95.4018, 29.7174];
     const DOWNTOWN = [-95.3698, 29.7604];
+    let map = null, rotating = false, atDowntown = false;
 
-    // Free OpenStreetMap-based vector tiles (OpenFreeMap): no API key, no login
-    const map = new maplibregl.Map({
-      container: "map",
-      style: "https://tiles.openfreemap.org/styles/liberty",
-      center: RICE,
-      zoom: 15.5,
-      pitch: 60,
-      bearing: -20,
-      maxPitch: 80
-    });
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
-
-    map.on("load", function () {
-      // Find the vector source that holds the building footprints
-      const style = map.getStyle();
-      const sourceName = Object.keys(style.sources).find(function (k) {
-        return style.sources[k].type === "vector";
+    function startMap() {
+      if (map) { map.resize(); return; }
+      if (typeof maplibregl === "undefined") {
+        info.textContent = "The map library could not load. Check your internet connection and refresh.";
+        return;
+      }
+      try {
+        map = new maplibregl.Map({
+          container: "map",
+          style: "https://tiles.openfreemap.org/styles/liberty",
+          center: RICE, zoom: 15.5, pitch: 60, bearing: -20, maxPitch: 80
+        });
+      } catch (e) {
+        info.textContent = "Map error: " + e.message;
+        return;
+      }
+      map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+      map.on("error", function (e) {
+        info.textContent = "Map problem: " + (e && e.error && e.error.message ? e.error.message : "could not load map data");
       });
-
-      // Hide the style's own flat/3D building layers so ours is the only one
-      style.layers.forEach(function (l) {
-        if (l["source-layer"] === "building") { map.setLayoutProperty(l.id, "visibility", "none"); }
+      map.on("load", function () {
+        info.textContent = "3D building mass of Houston. Drag to pan; right-click drag (or two fingers) to tilt and rotate.";
+        const style = map.getStyle();
+        const sourceName = Object.keys(style.sources).find(function (k) { return style.sources[k].type === "vector"; });
+        style.layers.forEach(function (l) {
+          if (l["source-layer"] === "building") { map.setLayoutProperty(l.id, "visibility", "none"); }
+        });
+        map.addLayer({
+          id: "houston-3d-buildings",
+          type: "fill-extrusion",
+          source: sourceName,
+          "source-layer": "building",
+          minzoom: 13,
+          paint: {
+            "fill-extrusion-height": ["coalesce", ["get", "render_height"], 12],
+            "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
+            "fill-extrusion-opacity": 0.9,
+            "fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["get", "render_height"], 12],
+              0, "#d9d9d9", 30, "#a8a8a8", 100, "#5c5c5c", 250, "#111111"]
+          }
+        });
+        new maplibregl.Marker({ color: "#1a9e4b" }).setLngLat(RICE)
+          .setPopup(new maplibregl.Popup().setText("Pickup: Rice University")).addTo(map);
+        new maplibregl.Marker({ color: "#000000" }).setLngLat(DOWNTOWN)
+          .setPopup(new maplibregl.Popup().setText("Dropoff: Downtown Houston")).addTo(map);
       });
+    }
 
-      // 3D building mass, colored by height (taller = darker)
-      map.addLayer({
-        id: "houston-3d-buildings",
-        type: "fill-extrusion",
-        source: sourceName,
-        "source-layer": "building",
-        minzoom: 13,
-        paint: {
-          "fill-extrusion-height": ["coalesce", ["get", "render_height"], 12],
-          "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
-          "fill-extrusion-opacity": 0.9,
-          "fill-extrusion-color": [
-            "interpolate", ["linear"], ["coalesce", ["get", "render_height"], 12],
-            0, "#d9d9d9", 30, "#a8a8a8", 100, "#5c5c5c", 250, "#111111"
-          ]
-        }
-      });
-
-      // Pickup and destination markers
-      new maplibregl.Marker({ color: "#1a9e4b" }).setLngLat(RICE)
-        .setPopup(new maplibregl.Popup().setText("Pickup: Rice University")).addTo(map);
-      new maplibregl.Marker({ color: "#000000" }).setLngLat(DOWNTOWN)
-        .setPopup(new maplibregl.Popup().setText("Dropoff: Downtown Houston")).addTo(map);
-    });
-
-    // Button 1: slowly rotate the camera
-    let rotating = false;
     function spin() {
-      if (!rotating) return;
+      if (!rotating || !map) return;
       map.setBearing(map.getBearing() + 0.3);
       requestAnimationFrame(spin);
     }
@@ -97,10 +156,8 @@
       this.textContent = rotating ? "Stop rotating" : "Rotate view";
       spin();
     });
-
-    // Button 2: fly between pickup and dropoff
-    let atDowntown = false;
     document.getElementById("tripBtn").addEventListener("click", function () {
+      if (!map) return;
       atDowntown = !atDowntown;
       map.flyTo({ center: atDowntown ? DOWNTOWN : RICE, zoom: atDowntown ? 15.8 : 15.5, pitch: 65, duration: 4000 });
       this.textContent = atDowntown ? "Fly back to Rice" : "Fly to Downtown";
