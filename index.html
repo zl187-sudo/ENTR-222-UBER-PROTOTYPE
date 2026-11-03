@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uber Clone – Class Prototype</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Helvetica, Arial, sans-serif; background: #f6f6f6; color: #000; }
+    header { background: #000; color: #fff; padding: 16px 24px; font-size: 28px; font-weight: bold; letter-spacing: -1px; }
+    main { max-width: 480px; margin: 24px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.1); margin-bottom: 16px; }
+    h2 { margin: 0 0 16px; font-size: 24px; }
+    input { width: 100%; padding: 14px; margin-bottom: 10px; border: none; background: #eee; border-radius: 8px; font-size: 16px; }
+    .ride { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+    .ride:last-child { border-bottom: none; }
+    .ride small { color: #666; }
+    .ride strong { font-size: 18px; }
+    /* BUTTON START */
+    #requestBtn { width: 100%; padding: 16px; background: #000; color: #fff; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+    #requestBtn.confirmed { background: #1a9e4b; }
+    #message { margin-top: 14px; text-align: center; font-size: 16px; min-height: 22px; }
+    /* BUTTON END */
+  </style>
+</head>
+<body>
+  <header>Uber</header>
+  <main>
+    <div class="card">
+      <h2>Where to?</h2>
+      <input type="text" value="Rice University, Houston, TX" aria-label="Pickup">
+      <input type="text" placeholder="Enter destination" aria-label="Destination">
+    </div>
+
+    <div class="card">
+      <h2>Choose a ride</h2>
+      <div class="ride"><div><strong>UberX</strong><br><small>4 min away · 4 seats</small></div><strong>$14.20</strong></div>
+      <div class="ride"><div><strong>Comfort</strong><br><small>6 min away · Newer cars</small></div><strong>$18.75</strong></div>
+      <div class="ride"><div><strong>UberXL</strong><br><small>8 min away · 6 seats</small></div><strong>$24.10</strong></div>
+    </div>
+
+    <!-- BUTTON START -->
+    <button id="requestBtn">Request UberX</button>
+    <div id="message"></div>
+    <script>
+      const btn = document.getElementById("requestBtn");
+      const msg = document.getElementById("message");
+      btn.addEventListener("click", function () {
+        btn.textContent = "Ride requested ✓";
+        btn.classList.add("confirmed");
+        msg.textContent = "Your driver, Alex, is arriving in 4 minutes.";
+      });
+    </script>
+    <!-- BUTTON END -->
+  </main>
+</body>
+</html>
